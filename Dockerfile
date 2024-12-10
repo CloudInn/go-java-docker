@@ -6,10 +6,10 @@ FROM debian:bullseye-slim as final
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=java-base /usr/lib/jvm /usr/lib/jvm
-
 COPY --from=golang-base /usr/local/go /usr/local/go
 
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
