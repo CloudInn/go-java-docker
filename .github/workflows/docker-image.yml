@@ -22,14 +22,10 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Get commit SHA
-        id: sha
-        run: echo "VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-
       - name: Build Docker image
         run: |
-          docker build -t cloudinn/go-java-docker:${{ env.VERSION }} .
+          docker build -t cloudinn/go-java-docker:go-1.23-openjdk-11 .
 
       - name: Push Docker image
         run: |
-          docker push cloudinn/go-java-docker:${{ env.VERSION }}
+          docker push cloudinn/go-java-docker:go-1.23-openjdk-11
