@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     ca-certificates \
     git \ 
+    openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=java-base /usr/lib/jvm /usr/lib/jvm
@@ -15,5 +16,7 @@ COPY --from=golang-base /usr/local/go /usr/local/go
 
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 ENV PATH=$PATH:$JAVA_HOME/bin:/usr/local/go/bin
+
+RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
 
 CMD ["bash"]
