@@ -22,10 +22,54 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Docker image
+      - name: Read Current Version
+        id: read-version
+        run: |
+          if [ ! -f VERSION ]; then
+            echo "1.0.0" > VERSION # Default version if VERSION file doesn't exist
+          fi
+          CURRENT_VERSION=$(cat VERSION)
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+
+      - name: Bump Version
+        id: bump-version
+        run: |
+          VERSION_PART=${{ inputs.version-part }} # Specify 'major', 'minor', or 'patch'
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+
+          case "$VERSION_PART" in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch|*)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "$NEW_VERSION" > VERSION
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Commit New Version
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add VERSION
+          git commit -m "Bump version to ${{ env.NEW_VERSION }}"
+          git push
+
+      - name: Build Docker Image
         run: |
           docker build -t cloudinn/go-java-docker:go-1.23-openjdk-11 .
+          docker tag cloudinn/go-java-docker:go-1.23-openjdk-11 cloudinn/go-java-docker:go-1.23-openjdk-11-${{ env.NEW_VERSION }}
 
-      - name: Push Docker image
+      - name: Push Docker Images
         run: |
           docker push cloudinn/go-java-docker:go-1.23-openjdk-11
+          docker push cloudinn/go-java-docker:go-1.23-openjdk-11-${{ env.NEW_VERSION }}
